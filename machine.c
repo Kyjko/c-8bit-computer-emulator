@@ -1,7 +1,7 @@
 #include "machine.h"
 
 void reset(machine_t* machine) {
-    memset(machine->general_memory, 0, sizeoof(machine->general_memory));
+    memset(machine->general_memory, 0, sizeof(machine->general_memory));
     memset(machine->stack, 0, sizeof(machine->stack));
     machine->ax = 0;
     machine->bx = 0;
@@ -15,14 +15,14 @@ void reset(machine_t* machine) {
 
 void store_to_reg(machine_t* machine, REGS reg, uint8_t value) {
     switch(reg) {
-        case ax: machine->ax = value;
-        case bx: machine->bx = value;
-        case cx: machine->cx = value;
-        case dx: machine->dx = value;
-        case sp: machine->sp = value;
-        case bp: machine->bp = value;
-        case pc: machine->pc = value;
-        case fl: machine->fl = value;
+        case ax: machine->ax = value; return;
+        case bx: machine->bx = value; return;
+        case cx: machine->cx = value; return;
+        case dx: machine->dx = value; return;
+        case sp: machine->sp = value; return;
+        case bp: machine->bp = value; return;
+        case pc: machine->pc = value; return;
+        case fl: machine->fl = value; return;
         default: fprintf(stderr, "[-] store_to_reg() : invalid register identifier\n"); return;
     }
 }
@@ -52,7 +52,7 @@ void poke_stack(machine_t* machine, uint32_t addr, uint8_t value) {
 
 uint32_t get_stack_bottom(machine_t* machine) {
     uint32_t i = 0;
-    while(machine->stack[i] != NULL) {
+    while(machine->stack[i] != 0) {
         ++i;
     }
 

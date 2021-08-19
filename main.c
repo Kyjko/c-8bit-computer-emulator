@@ -7,19 +7,20 @@
 #include <stdio.h>
 #include <string.h>
 #include <memory.h>
-#include "machine.h"
+#include "machine.c"
+#include <stdlib.h>
 
 // assume one line doesn't contain more than 8 bits worth of chars
-#define BUF_LEN 2<<9-1
+#define BUF_LEN (2<<9)-1
 // assume there's a maximum of 5 space-delimetered "words" in a line
 #define MAX_LINE_ELEMENTS 5
 
-typedef enum INSTR {
+/*typedef enum INSTR {
     mov, cmp, jmp, jz, pop, push, lea, nop, hlt, ret, add, sub, mul, div
-} INSTR;
+} INSTR; */
 
 const char delim[2] = " ";
-
+volatile uint32_t g_err_counter = 0;
 
 int32_t read_code(machine_t* machine) {
     
@@ -36,7 +37,7 @@ int32_t read_code(machine_t* machine) {
     char buf[BUF_LEN];
     uint32_t ln = 0;
     while(fgets(buf, BUF_LEN, fp)) {
-        fprintf(stdout, "LINE #%d: %s\n", ++ln);
+        fprintf(stdout, "LINE #%d: %s\n", ++ln, buf);
         
         char* line_contents[MAX_LINE_ELEMENTS];
 
@@ -53,13 +54,13 @@ int32_t read_code(machine_t* machine) {
         if(strcmp(line_contents[0], "mov") == 0) {
             // mov instr -> check for arguments
             if(strcmp(line_contents[1], "ax") == 0) {
-                store_to_reg(machine, ax, line_contents[2]);
+                store_to_reg(machine, ax, atoi(line_contents[2]));
             } else if(strcmp(line_contents[1], "bx") == 0) {
-                store_to_reg(machine, bx, line_contents[2]);
+                store_to_reg(machine, bx, atoi(line_contents[2]));
             } else if(strcmp(line_contents[1], "cx") == 0) {
-                store_to_reg(machine, cx, line_contents[2]);
+                store_to_reg(machine, cx, atoi(line_contents[2]));
             } else if(strcmp(line_contents[1], "dx") == 0) {
-                store_to_reg(machine, dx, line_contents[2]);
+                store_to_reg(machine, dx, atoi(line_contents[2]));
             } else {
                 fprintf(stderr, " [COMPILATION] - invalid `mov` instruction arguments!\n");
                 ++err_counter;
@@ -68,10 +69,10 @@ int32_t read_code(machine_t* machine) {
         } else if(strcmp(line_contents[0], "cmp") == 0) {
             compare(machine, line_contents[1], line_contents[2]);
         } else if(strcmp(line_contents[0], "jmp") == 0) {
-            machine->pc = line_contents[1];
+            machine->pc = atoi(line_contents[1]);
         } else if(strcmp(line_contents[0], "jz") == 0) {
             if(machine->fl != 0) {
-                machine->pc = line_contents[1];
+                machine->pc = atoi(line_contents[1]);
             }
         } else if(strcmp(line_contents[0], "pop") == 0) {
             // first argument is the specified register
@@ -107,6 +108,7 @@ int32_t read_code(machine_t* machine) {
              uint32_t val = atoi(line_contents[2]);
              if(sizeof(val) != sizeof(uint32_t)) {
                 fprintf(stderr, " [-](add) invalid instruction argument! (operand)\n");
+                ++err_counter;
             }
              if(strcmp(line_contents[1], "ax")) {
                 machine->ax += val;
@@ -118,11 +120,13 @@ int32_t read_code(machine_t* machine) {
                 machine->dx += val;
              } else {
                  fprintf(stderr, " [-](add) invalid instruction argument! (register)\n");
+                 ++err_counter;
              }
         } else if(strcmp(line_contents[0], "sub") == 0) {
             uint32_t val = atoi(line_contents[2]);
             if(sizeof(val) != sizeof(uint32_t)) {
                 fprintf(stderr, " [-](sub) invalid instruction argument! (operand)\n");
+                ++err_counter;
             }
              if(strcmp(line_contents[1], "ax")) {
                 machine->ax -= val;
@@ -134,11 +138,13 @@ int32_t read_code(machine_t* machine) {
                 machine->dx -= val;
              } else {
                  fprintf(stderr, " [-](sub) invalid instruction argument! (register)\n");
+                 ++err_counter;
              }
         } else if(strcmp(line_contents[0], "mul") == 0) {
             uint32_t val = atoi(line_contents[2]);
             if(sizeof(val) != sizeof(uint32_t)) {
                 fprintf(stderr, " [-](mul) invalid instruction argument! (operand)\n");
+                ++err_counter;
             }
              if(strcmp(line_contents[1], "ax")) {
                 machine->ax *= val;
@@ -150,11 +156,13 @@ int32_t read_code(machine_t* machine) {
                 machine->dx *= val;
              } else {
                  fprintf(stderr, " [-](mul) invalid instruction argument! (register)\n");
+                 ++err_counter;
              }
         } else if(strcmp(line_contents[0], "div") == 0) {
             uint32_t val = atoi(line_contents[2]);
             if(sizeof(val) != sizeof(uint32_t)) {
                 fprintf(stderr, " [-](div) invalid instruction argument! (operand)\n");
+                ++err_counter;
             }
              if(strcmp(line_contents[1], "ax")) {
                 machine->ax /= val;
@@ -166,12 +174,15 @@ int32_t read_code(machine_t* machine) {
                 machine->dx /= val;
              } else {
                  fprintf(stderr, " [-](div) invalid instruction argument! (register)\n");
+                 ++err_counter;
              }
         } else if(strcmp(line_contents[0], ";") == 0) {
             // DO NOTHING - comment
         } else {
-            fprintf(stderr, " [-] unknown instruction!\n");
-            ++err_counter;
+            if(line_elem_counter == 0) {
+                fprintf(stderr, " [-] unknown instruction!\n");
+                ++err_counter;
+            }
         }
 
     }
@@ -179,6 +190,7 @@ int32_t read_code(machine_t* machine) {
     fclose(fp);
     fp = NULL;
     
+    g_err_counter = err_counter;
     return err_counter;
 }
 
@@ -188,10 +200,11 @@ int main(void) {
 
     if(read_code(machine) != 0) {
         fprintf(stderr, "[===> CODE EXECUTION <===] - TERMINATED!\n");
+        fprintf(stderr, "Errors: %d\n", g_err_counter);
         free(machine);
         return -1;
     } else {
-        fprintf(stderr, "[===> CODE EXECUTION <===] - SUCCES!\n");
+        fprintf(stderr, "[===> CODE EXECUTION <===] - SUCCESS!\n");
 
         // TODO: something?
     }
