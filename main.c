@@ -24,7 +24,7 @@ const char delim[2] = " ";
 int32_t read_code(machine_t* machine) {
     
     // custom assembly code parsing here
-    FILE* fp = fopen("./code.kasm", "r");
+    FILE* fp = fopen("./source.kasm", "r");
     if(fp == NULL) {
         fprintf(stderr, "[-] fopen() - Cannot find the source file!\n");
         return -1;
@@ -37,7 +37,7 @@ int32_t read_code(machine_t* machine) {
     uint32_t ln = 0;
     while(fgets(buf, BUF_LEN, fp)) {
         fprintf(stdout, "LINE #%d: %s\n", ++ln);
-
+        
         char* line_contents[MAX_LINE_ELEMENTS];
 
         uint8_t line_elem_counter = 0;
@@ -104,15 +104,73 @@ int32_t read_code(machine_t* machine) {
         } else if(strcmp(line_contents[0], "ret") == 0) {
             // TODO: return from function ?????
         } else if(strcmp(line_contents[0], "add") == 0) {
-             
+             uint32_t val = atoi(line_contents[2]);
+             if(sizeof(val) != sizeof(uint32_t)) {
+                fprintf(stderr, " [-](add) invalid instruction argument! (operand)\n");
+            }
+             if(strcmp(line_contents[1], "ax")) {
+                machine->ax += val;
+             } else if(strcmp(line_contents[1], "bx")) {
+                machine->bx += val;
+             } else if(strcmp(line_contents[1], "cx")) {
+                machine->cx += val;
+             } else if(strcmp(line_contents[1], "dx")) {
+                machine->dx += val;
+             } else {
+                 fprintf(stderr, " [-](add) invalid instruction argument! (register)\n");
+             }
         } else if(strcmp(line_contents[0], "sub") == 0) {
-            
+            uint32_t val = atoi(line_contents[2]);
+            if(sizeof(val) != sizeof(uint32_t)) {
+                fprintf(stderr, " [-](sub) invalid instruction argument! (operand)\n");
+            }
+             if(strcmp(line_contents[1], "ax")) {
+                machine->ax -= val;
+             } else if(strcmp(line_contents[1], "bx")) {
+                machine->bx -= val;
+             } else if(strcmp(line_contents[1], "cx")) {
+                machine->cx -= val;
+             } else if(strcmp(line_contents[1], "dx")) {
+                machine->dx -= val;
+             } else {
+                 fprintf(stderr, " [-](sub) invalid instruction argument! (register)\n");
+             }
         } else if(strcmp(line_contents[0], "mul") == 0) {
-            
+            uint32_t val = atoi(line_contents[2]);
+            if(sizeof(val) != sizeof(uint32_t)) {
+                fprintf(stderr, " [-](mul) invalid instruction argument! (operand)\n");
+            }
+             if(strcmp(line_contents[1], "ax")) {
+                machine->ax *= val;
+             } else if(strcmp(line_contents[1], "bx")) {
+                machine->bx *= val;
+             } else if(strcmp(line_contents[1], "cx")) {
+                machine->cx *= val;
+             } else if(strcmp(line_contents[1], "dx")) {
+                machine->dx *= val;
+             } else {
+                 fprintf(stderr, " [-](mul) invalid instruction argument! (register)\n");
+             }
         } else if(strcmp(line_contents[0], "div") == 0) {
-            
+            uint32_t val = atoi(line_contents[2]);
+            if(sizeof(val) != sizeof(uint32_t)) {
+                fprintf(stderr, " [-](div) invalid instruction argument! (operand)\n");
+            }
+             if(strcmp(line_contents[1], "ax")) {
+                machine->ax /= val;
+             } else if(strcmp(line_contents[1], "ax")) {
+                machine->bx /= val;
+             } else if(strcmp(line_contents[1], "ax")) {
+                machine->cx /= val;
+             } else if(strcmp(line_contents[1], "ax")) {
+                machine->dx /= val;
+             } else {
+                 fprintf(stderr, " [-](div) invalid instruction argument! (register)\n");
+             }
+        } else if(strcmp(line_contents[0], ";") == 0) {
+            // DO NOTHING - comment
         } else {
-            fprintf(stderr, " [COMPILATION] - unknown instruction!\n");
+            fprintf(stderr, " [-] unknown instruction!\n");
             ++err_counter;
         }
 
@@ -128,7 +186,15 @@ int main(void) {
 
     machine_t* machine = (machine_t*) malloc(sizeof(machine_t));
 
-    read_code(machine);
+    if(read_code(machine) != 0) {
+        fprintf(stderr, "[===> CODE EXECUTION <===] - TERMINATED!\n");
+        free(machine);
+        return -1;
+    } else {
+        fprintf(stderr, "[===> CODE EXECUTION <===] - SUCCES!\n");
+
+        // TODO: something?
+    }
 
     free(machine);
     return 0;
