@@ -74,17 +74,35 @@ int32_t read_code(machine_t* machine) {
                 machine->pc = line_contents[1];
             }
         } else if(strcmp(line_contents[0], "pop") == 0) {
-            
+            // first argument is the specified register
+            if(strcmp(line_contents[1], "ax") == 0) {
+                pop_stack(machine, ax);
+            } else if(strcmp(line_contents[1], "bx") == 0) {
+                pop_stack(machine, bx);
+            } else if(strcmp(line_contents[1], "cx") == 0) {
+                pop_stack(machine, cx);
+            } else if(strcmp(line_contents[1], "dx") == 0) {
+                pop_stack(machine, dx);
+            }
         } else if(strcmp(line_contents[0], "push") == 0) {
-            
+            if(strcmp(line_contents[1], "ax") == 0) {
+                push_stack(machine, ax);
+            } else if(strcmp(line_contents[1], "bx") == 0) {
+                push_stack(machine, bx);
+            } else if(strcmp(line_contents[1], "cx") == 0) {
+                push_stack(machine, cx);
+            } else if(strcmp(line_contents[1], "dx") == 0) {
+                push_stack(machine, dx);
+            }
         } else if(strcmp(line_contents[0], "lea") == 0) {
-            
+            // TODO: implement
         } else if(strcmp(line_contents[0], "nop") == 0) {
-            
+            // NOTHING - most useful instruction ever
+            // has to be included because of nop slides
         } else if(strcmp(line_contents[0], "hlt") == 0) {
-            
+            halt(machine);
         } else if(strcmp(line_contents[0], "ret") == 0) {
-            
+            // TODO: return from function ?????
         } else if(strcmp(line_contents[0], "add") == 0) {
              
         } else if(strcmp(line_contents[0], "sub") == 0) {

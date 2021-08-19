@@ -48,5 +48,9 @@ uint8_t peek(const machine_t* machine, uint32_t addr);
 void poke_stack(machine_t* machine, uint32_t addr, uint8_t value);
 uint8_t peek_stack(const machine_t* machine, uint32_t addr);
 void compare(machine_t* machine, char* reg_1, char* reg_2);
+uint32_t stack_bottom(machine_t* machine);
+void pop_stack(machine_t* machine);
+void push_stack(machine_t* machine);
+void halt(machine_t* machine);
 
 #endif

@@ -50,6 +50,58 @@ void poke_stack(machine_t* machine, uint32_t addr, uint8_t value) {
     machine->stack[addr] = value;
 }
 
+uint32_t get_stack_bottom(machine_t* machine) {
+    uint32_t i = 0;
+    while(machine->stack[i] != NULL) {
+        ++i;
+    }
+
+    return i;
+}
+
+void pop_stack(machine_t* machine, enum REGS reg) {
+    switch(reg) {
+        case ax: {
+            machine->ax = machine->stack[get_stack_bottom(machine)];
+            machine->stack[get_stack_bottom(machine)] = 0;
+        }
+        case bx: {
+            machine->bx = machine->stack[get_stack_bottom(machine)];
+            machine->stack[get_stack_bottom(machine)] = 0;
+        }
+        case cx: {
+            machine->cx = machine->stack[get_stack_bottom(machine)];
+            machine->stack[get_stack_bottom(machine)] = 0;
+        }
+        case dx: {
+            machine->dx = machine->stack[get_stack_bottom(machine)];
+            machine->stack[get_stack_bottom(machine)] = 0;
+        }
+        default: {
+            fprintf(stderr, "[-] pop() : invalid register argument!\n");
+        }
+    }
+}
+void push_stack(machine_t* machine, enum REGS reg) {
+    switch(reg) {
+        case ax: {
+            machine->stack[get_stack_bottom(machine)] = machine->ax;
+        }
+        case bx: {
+            machine->stack[get_stack_bottom(machine)] = machine->bx;
+        }
+        case cx: {
+            machine->stack[get_stack_bottom(machine)] = machine->cx;
+        }
+        case dx: {
+            machine->stack[get_stack_bottom(machine)] = machine->dx;
+        }
+        default: {
+            fprintf(stderr, "[-] push() : invalid register argument!\n");
+        }
+    }
+}
+
 uint8_t peek_stack(const machine_t* machine, uint32_t addr) {
     if(addr < 0 || addr >= STACK_CAPACITY) {
         fprintf(stderr, "[-] peek_stack() : invalid memory address\n");
@@ -95,4 +147,8 @@ void compare(machine_t* machine, char* reg_1, char* reg_2) {
             machine->fl = 1;
         }
     }
+}
+
+void halt(machine_t* machine) {
+    // TODO: halt
 }
