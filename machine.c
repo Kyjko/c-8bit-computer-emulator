@@ -55,7 +55,7 @@ uint32_t get_stack_bottom(machine_t* machine) {
     while(machine->stack[i] != 0) {
         ++i;
     }
-
+    machine->sp = i;
     return i;
 }
 

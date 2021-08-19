@@ -23,6 +23,7 @@ const char delim[2] = " ";
 volatile uint32_t g_err_counter = 0;
 
 int32_t read_code(machine_t* machine) {
+    reset(machine);
     
     // custom assembly code parsing here
     FILE* fp = fopen("./source.kasm", "r");
@@ -184,6 +185,8 @@ int32_t read_code(machine_t* machine) {
                 ++err_counter;
             }
         }
+        
+        machine->pc++;
 
     }
 
