@@ -1,0 +1,4 @@
+mov ax 4
+mov bx 5
+add ab bx
+ret

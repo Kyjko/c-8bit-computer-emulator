@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "*.ms": "assembly",
+        "*.ks": "assembly",
+        "string.h": "c",
+        "memory.h": "c"
+    }
+}
