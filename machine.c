@@ -58,3 +58,41 @@ uint8_t peek_stack(const machine_t* machine, uint32_t addr) {
 
     return machine->stack[addr];
 }
+
+void compare(machine_t* machine, char* reg_1, char* reg_2) {
+    if((strcmp(reg_1, "ax") == 0 && strcmp(reg_2, "bx") == 0) || (strcmp(reg_1, "bx") == 0 && strcmp(reg_2, "ax") == 0)) {
+        if(machine->ax == machine->bx) {
+            machine->fl = 1;
+        }
+    }
+
+    if((strcmp(reg_1, "ax") == 0 && strcmp(reg_2, "cx") == 0) || (strcmp(reg_1, "cx") == 0 && strcmp(reg_2, "ax") == 0)) {
+        if(machine->ax == machine->cx) {
+            machine->fl = 1;
+        }
+    }
+
+    if((strcmp(reg_1, "ax") == 0 && strcmp(reg_2, "dx") == 0) || (strcmp(reg_1, "dx") == 0 && strcmp(reg_2, "ax") == 0)) {
+        if(machine->ax == machine->dx) {
+            machine->fl = 1;
+        }
+    }
+
+    if((strcmp(reg_1, "bx") == 0 && strcmp(reg_2, "cx") == 0) || (strcmp(reg_1, "cx") == 0 && strcmp(reg_2, "bx") == 0)) {
+        if(machine->bx == machine->cx) {
+            machine->fl = 1;
+        }
+    }
+
+    if((strcmp(reg_1, "cx") == 0 && strcmp(reg_2, "dx") == 0) || (strcmp(reg_1, "dx") == 0 && strcmp(reg_2, "cx") == 0)) {
+        if(machine->cx == machine->dx) {
+            machine->fl = 1;
+        }
+    }
+
+    if((strcmp(reg_1, "bx") == 0 && strcmp(reg_2, "dx") == 0) || (strcmp(reg_1, "dx") == 0 && strcmp(reg_2, "bx") == 0)) {
+        if(machine->bx == machine->dx) {
+            machine->fl = 1;
+        }
+    }
+}

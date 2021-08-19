@@ -29,6 +29,8 @@ int32_t read_code(machine_t* machine) {
         fprintf(stderr, "[-] fopen() - Cannot find the source file!\n");
         return -1;
     }
+
+    uint32_t err_counter = 0;
     
     // line = buf
     char buf[BUF_LEN];
@@ -60,14 +62,17 @@ int32_t read_code(machine_t* machine) {
                 store_to_reg(machine, dx, line_contents[2]);
             } else {
                 fprintf(stderr, " [COMPILATION] - invalid `mov` instruction arguments!\n");
+                ++err_counter;
             }
 
         } else if(strcmp(line_contents[0], "cmp") == 0) {
-            
+            compare(machine, line_contents[1], line_contents[2]);
         } else if(strcmp(line_contents[0], "jmp") == 0) {
-            
+            machine->pc = line_contents[1];
         } else if(strcmp(line_contents[0], "jz") == 0) {
-            
+            if(machine->fl != 0) {
+                machine->pc = line_contents[1];
+            }
         } else if(strcmp(line_contents[0], "pop") == 0) {
             
         } else if(strcmp(line_contents[0], "push") == 0) {
@@ -90,6 +95,7 @@ int32_t read_code(machine_t* machine) {
             
         } else {
             fprintf(stderr, " [COMPILATION] - unknown instruction!\n");
+            ++err_counter;
         }
 
     }
@@ -97,7 +103,7 @@ int32_t read_code(machine_t* machine) {
     fclose(fp);
     fp = NULL;
     
-    return 0;
+    return err_counter;
 }
 
 int main(void) {
