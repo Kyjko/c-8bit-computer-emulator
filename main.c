@@ -42,14 +42,17 @@ int32_t read_code(machine_t* machine) {
     uint32_t ln = 0;
     while(fgets(buf, BUF_LEN, fp)) {
         // only look at non-empty lines
-        if(buf[0] != '\0') {
-            
+        if(strcmp(buf, "\n") != 0) {
+           
         fprintf(stdout, "LINE #%d: %s\n", ++ln, buf);
         
         char* line_contents[MAX_LINE_ELEMENTS];
 
         uint8_t line_elem_counter = 0;
+
         _Bool is_comment = false;
+        _Bool is_unknown_instr = false; 
+        
         // tokenize line
         char* tok = strtok(buf, delim);
         while(tok != NULL) {
@@ -185,17 +188,25 @@ int32_t read_code(machine_t* machine) {
             // comment
             is_comment = true;
         } else {
-            if(line_elem_counter == 0) {
+            is_unknown_instr = true;
+            
+        }
+        if(!is_comment) {
+            if(!is_unknown_instr) {
+                print_registers(machine);
+            } else {
                 fprintf(stderr, " [-] unknown instruction!\n");
                 ++err_counter;
             }
-        }
-        if(!is_comment) {
-            print_registers(machine);
         } else {
             fprintf(stdout, "(comment line)\n");
         }
-        } 
+
+        is_comment = false;
+        is_unknown_instr = false;
+        } else {
+            fprintf(stdout, "(empty line)\n");
+        }
     }
 
     fclose(fp);
@@ -210,7 +221,7 @@ int main(void) {
     machine_t* machine = (machine_t*) malloc(sizeof(machine_t));
 
     if(read_code(machine) != 0) {
-        fprintf(stderr, "[===> CODE EXECUTION <===] - TERMINATED!\n");
+        fprintf(stderr, "[===> CODE EXECUTION <===] - ERROR(S)!\n");
         fprintf(stderr, "Errors: %d\n", g_err_counter);
         free(machine);
         return -1;
