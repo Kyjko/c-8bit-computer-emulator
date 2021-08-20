@@ -55,8 +55,8 @@ uint32_t get_stack_bottom(machine_t* machine) {
     while(machine->stack[i] != 0) {
         ++i;
     }
-    machine->sp = i;
-    return i;
+    machine->sp = i + 1;
+    return i + 1;
 }
 
 void pop_stack(machine_t* machine, enum REGS reg) {
@@ -81,25 +81,30 @@ void pop_stack(machine_t* machine, enum REGS reg) {
             fprintf(stderr, "[-] pop() : invalid register argument!\n");
         }
     }
+
+    get_stack_bottom(machine);
 }
 void push_stack(machine_t* machine, enum REGS reg) {
+    uint32_t stack_bottom = get_stack_bottom(machine);
     switch(reg) {
         case ax: {
-            machine->stack[get_stack_bottom(machine)] = machine->ax;
+            machine->stack[stack_bottom] = machine->ax;
         }
         case bx: {
-            machine->stack[get_stack_bottom(machine)] = machine->bx;
+            machine->stack[stack_bottom] = machine->bx;
         }
         case cx: {
-            machine->stack[get_stack_bottom(machine)] = machine->cx;
+            machine->stack[stack_bottom] = machine->cx;
         }
         case dx: {
-            machine->stack[get_stack_bottom(machine)] = machine->dx;
+            machine->stack[stack_bottom] = machine->dx;
         }
         default: {
             fprintf(stderr, "[-] push() : invalid register argument!\n");
         }
     }
+
+    get_stack_bottom(machine);
 }
 
 uint8_t peek_stack(const machine_t* machine, uint32_t addr) {
@@ -151,4 +156,22 @@ void compare(machine_t* machine, char* reg_1, char* reg_2) {
 
 void halt(machine_t* machine) {
     // TODO: halt
+}
+
+void print_registers(machine_t* machine) {
+    fprintf(stdout, "ax:\t%04x\nbx:\t%04x\ncx:\t%04x\ndx:\t%04x\nsp:\t%04x\nbp:\t%04x\npc:\t%04x\nfl:\t%04x\n", 
+    machine->ax, machine->bx, machine->cx, machine->dx, machine->sp, machine->bp, machine->pc, machine->fl);
+}  
+void print_register(machine_t* machine, enum REGS reg) {
+    switch(reg) {
+        case ax: fprintf(stdout, "ax:\t%04x\n", machine->ax); return;
+        case bx: fprintf(stdout, "bx:\t%04x\n", machine->bx); return;
+        case cx: fprintf(stdout, "cx:\t%04x\n", machine->cx); return;
+        case dx: fprintf(stdout, "dx:\t%04x\n", machine->dx); return;
+        case sp: fprintf(stdout, "sp:\t%04x\n", machine->sp); return;
+        case bp: fprintf(stdout, "bp:\t%04x\n", machine->bp); return;
+        case pc: fprintf(stdout, "pc:\t%04x\n", machine->pc); return;
+        case fl: fprintf(stdout, "fl:\t%04x\n", machine->fl); return;
+        default: {}
+    }
 }

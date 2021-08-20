@@ -52,5 +52,7 @@ uint32_t stack_bottom(machine_t* machine);
 void pop_stack(machine_t* machine, enum REGS reg);
 void push_stack(machine_t* machine, enum REGS reg);
 void halt(machine_t* machine);
+void print_registers(machine_t* machine);
+void print_register(machine_t* machine, enum REGS reg);
 
 #endif

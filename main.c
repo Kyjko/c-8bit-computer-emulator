@@ -187,6 +187,7 @@ int32_t read_code(machine_t* machine) {
         }
         
         machine->pc++;
+        print_registers(machine);
 
     }
 
