@@ -54,5 +54,12 @@ void push_stack(machine_t* machine, enum REGS reg);
 void halt(machine_t* machine);
 void print_registers(machine_t* machine);
 void print_register(machine_t* machine, enum REGS reg);
+void add_to_register(machine_t* machine, enum REGS reg, uint8_t value);
+void sub_to_register(machine_t* machine, enum REGS reg, uint8_t value);
+void mul_to_register(machine_t* machine, enum REGS reg, uint8_t value);
+void div_to_register(machine_t* machine, enum REGS reg, uint8_t value);
+uint32_t jump(machine_t* machine, uint32_t addr);
+uint32_t jump_if_zero(machine_t* machine, uint32_t addr);
+
 
 #endif

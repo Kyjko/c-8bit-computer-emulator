@@ -15,23 +15,88 @@ void reset(machine_t* machine) {
 
 void store_to_reg(machine_t* machine, REGS reg, uint8_t value) {
     switch(reg) {
-        case ax: machine->ax = value; return;
-        case bx: machine->bx = value; return;
-        case cx: machine->cx = value; return;
-        case dx: machine->dx = value; return;
-        case sp: machine->sp = value; return;
-        case bp: machine->bp = value; return;
-        case pc: machine->pc = value; return;
-        case fl: machine->fl = value; return;
+        case ax: machine->ax = value; break;
+        case bx: machine->bx = value; break;
+        case cx: machine->cx = value; break;
+        case dx: machine->dx = value; break;
+        case sp: machine->sp = value; break;
+        case bp: machine->bp = value; break;
+        case pc: machine->pc = value; break;
+        case fl: machine->fl = value; break;
         default: fprintf(stderr, "[-] store_to_reg() : invalid register identifier\n"); return;
     }
+
+    machine->pc++;
 }
+
+void add_to_register(machine_t* machine, enum REGS reg, uint8_t value) {
+    switch(reg) {
+        case ax: machine->ax += value; break;
+        case bx: machine->bx += value; break;
+        case cx: machine->cx += value; break;
+        case dx: machine->dx += value; break;
+        default: fprintf(stderr, "[-] add_to_register() : invalid register identifier\n"); return;
+    }
+
+    machine->pc++;
+}
+
+void sub_to_register(machine_t* machine, enum REGS reg, uint8_t value) {
+    switch(reg) {
+        case ax: machine->ax -= value; break;
+        case bx: machine->bx -= value; break;
+        case cx: machine->cx -= value; break;
+        case dx: machine->dx -= value; break;
+        default: fprintf(stderr, "[-] sub_to_register() : invalid register identifier\n"); return;
+    }
+    
+    machine->pc++;
+}
+
+void mul_to_register(machine_t* machine, enum REGS reg, uint8_t value) {
+    switch(reg) {
+        case ax: machine->ax *= value; break;
+        case bx: machine->bx *= value; break;
+        case cx: machine->cx *= value; break;
+        case dx: machine->dx *= value; break;
+        default: fprintf(stderr, "[-] mul_to_register() : invalid register identifier\n"); return;
+    }
+    
+    machine->pc++;
+}
+
+void div_to_register(machine_t* machine, enum REGS reg, uint8_t value) {
+    switch(reg) {
+        case ax: machine->ax /= value; break;
+        case bx: machine->bx /= value; break;
+        case cx: machine->cx /= value; break;
+        case dx: machine->dx /= value; break;
+        default: fprintf(stderr, "[-] div_to_register() : invalid register identifier\n"); return;
+    }
+    
+    machine->pc++;
+}
+
+uint32_t jump(machine_t* machine, uint32_t addr) {
+    machine->pc = addr;
+    return machine->pc;
+}
+
+uint32_t jump_if_zero(machine_t* machine, uint32_t addr) {
+    if(machine->fl != 0) {
+        machine->pc = addr;
+    }
+
+    return machine->pc;
+}
+
 
 void poke(machine_t* machine, uint32_t addr, uint8_t value) {
     if(addr < 0 || addr >= GEN_MEM_CAPACITY) {
         fprintf(stderr, "[-] poke() : invalid memory address\n");
     }
     machine->general_memory[addr] = value;
+
 }
 
 uint8_t peek(const machine_t* machine, uint32_t addr) {
@@ -41,6 +106,7 @@ uint8_t peek(const machine_t* machine, uint32_t addr) {
     }
 
     return machine->general_memory[addr];
+
 }
 
 void poke_stack(machine_t* machine, uint32_t addr, uint8_t value) {
@@ -83,6 +149,7 @@ void pop_stack(machine_t* machine, enum REGS reg) {
     }
 
     get_stack_bottom(machine);
+    machine->pc++;
 }
 void push_stack(machine_t* machine, enum REGS reg) {
     uint32_t stack_bottom = get_stack_bottom(machine);
@@ -105,6 +172,7 @@ void push_stack(machine_t* machine, enum REGS reg) {
     }
 
     get_stack_bottom(machine);
+    machine->pc++;
 }
 
 uint8_t peek_stack(const machine_t* machine, uint32_t addr) {
@@ -152,10 +220,13 @@ void compare(machine_t* machine, char* reg_1, char* reg_2) {
             machine->fl = 1;
         }
     }
+
+    machine->pc++;
 }
 
 void halt(machine_t* machine) {
     // TODO: halt
+    machine->pc++;
 }
 
 void print_registers(machine_t* machine) {

@@ -2,6 +2,8 @@
 
     Parse custom assembly code
 
+    TODO: add instruction to work on registers
+
 */
 
 #include <stdio.h>
@@ -9,6 +11,7 @@
 #include <memory.h>
 #include "machine.c"
 #include <stdlib.h>
+#include <stdbool.h>
 
 // assume one line doesn't contain more than 8 bits worth of chars
 #define BUF_LEN (2<<9)-1
@@ -38,12 +41,15 @@ int32_t read_code(machine_t* machine) {
     char buf[BUF_LEN];
     uint32_t ln = 0;
     while(fgets(buf, BUF_LEN, fp)) {
+        // only look at non-empty lines
+        if(buf[0] != '\0') {
+            
         fprintf(stdout, "LINE #%d: %s\n", ++ln, buf);
         
         char* line_contents[MAX_LINE_ELEMENTS];
 
         uint8_t line_elem_counter = 0;
-        
+        _Bool is_comment = false;
         // tokenize line
         char* tok = strtok(buf, delim);
         while(tok != NULL) {
@@ -70,11 +76,9 @@ int32_t read_code(machine_t* machine) {
         } else if(strcmp(line_contents[0], "cmp") == 0) {
             compare(machine, line_contents[1], line_contents[2]);
         } else if(strcmp(line_contents[0], "jmp") == 0) {
-            machine->pc = atoi(line_contents[1]);
+            jump(machine, atoi(line_contents[1]));
         } else if(strcmp(line_contents[0], "jz") == 0) {
-            if(machine->fl != 0) {
-                machine->pc = atoi(line_contents[1]);
-            }
+            jump_if_zero(machine, atoi(line_contents[1]));
         } else if(strcmp(line_contents[0], "pop") == 0) {
             // first argument is the specified register
             if(strcmp(line_contents[1], "ax") == 0) {
@@ -112,13 +116,13 @@ int32_t read_code(machine_t* machine) {
                 ++err_counter;
             }
              if(strcmp(line_contents[1], "ax")) {
-                machine->ax += val;
+                add_to_register(machine, ax, val);
              } else if(strcmp(line_contents[1], "bx")) {
-                machine->bx += val;
+                add_to_register(machine, bx, val);
              } else if(strcmp(line_contents[1], "cx")) {
-                machine->cx += val;
+                add_to_register(machine, cx, val);
              } else if(strcmp(line_contents[1], "dx")) {
-                machine->dx += val;
+                add_to_register(machine, dx, val);
              } else {
                  fprintf(stderr, " [-](add) invalid instruction argument! (register)\n");
                  ++err_counter;
@@ -130,13 +134,13 @@ int32_t read_code(machine_t* machine) {
                 ++err_counter;
             }
              if(strcmp(line_contents[1], "ax")) {
-                machine->ax -= val;
+                sub_to_register(machine, ax, val);
              } else if(strcmp(line_contents[1], "bx")) {
-                machine->bx -= val;
+                sub_to_register(machine, bx, val);
              } else if(strcmp(line_contents[1], "cx")) {
-                machine->cx -= val;
+                sub_to_register(machine, cx, val);
              } else if(strcmp(line_contents[1], "dx")) {
-                machine->dx -= val;
+                sub_to_register(machine, dx, val);
              } else {
                  fprintf(stderr, " [-](sub) invalid instruction argument! (register)\n");
                  ++err_counter;
@@ -148,13 +152,13 @@ int32_t read_code(machine_t* machine) {
                 ++err_counter;
             }
              if(strcmp(line_contents[1], "ax")) {
-                machine->ax *= val;
+                mul_to_register(machine, ax, val);
              } else if(strcmp(line_contents[1], "bx")) {
-                machine->bx *= val;
+                mul_to_register(machine, bx, val);
              } else if(strcmp(line_contents[1], "cx")) {
-                machine->cx *= val;
+                mul_to_register(machine, cx, val);
              } else if(strcmp(line_contents[1], "dx")) {
-                machine->dx *= val;
+                mul_to_register(machine, dx, val);
              } else {
                  fprintf(stderr, " [-](mul) invalid instruction argument! (register)\n");
                  ++err_counter;
@@ -166,29 +170,32 @@ int32_t read_code(machine_t* machine) {
                 ++err_counter;
             }
              if(strcmp(line_contents[1], "ax")) {
-                machine->ax /= val;
+                div_to_register(machine, ax, val);
              } else if(strcmp(line_contents[1], "ax")) {
-                machine->bx /= val;
+                div_to_register(machine, bx, val);
              } else if(strcmp(line_contents[1], "ax")) {
-                machine->cx /= val;
+                div_to_register(machine, cx, val);
              } else if(strcmp(line_contents[1], "ax")) {
-                machine->dx /= val;
+                div_to_register(machine, dx, val);
              } else {
                  fprintf(stderr, " [-](div) invalid instruction argument! (register)\n");
                  ++err_counter;
              }
         } else if(strcmp(line_contents[0], ";") == 0) {
-            // DO NOTHING - comment
+            // comment
+            is_comment = true;
         } else {
             if(line_elem_counter == 0) {
                 fprintf(stderr, " [-] unknown instruction!\n");
                 ++err_counter;
             }
         }
-        
-        machine->pc++;
-        print_registers(machine);
-
+        if(!is_comment) {
+            print_registers(machine);
+        } else {
+            fprintf(stdout, "(comment line)\n");
+        }
+        } 
     }
 
     fclose(fp);

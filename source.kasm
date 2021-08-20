@@ -1,5 +1,6 @@
 ; move 4 to ax
 mov ax 4
+; move 5 to register bx
 mov bx 5
-add ab bx
+add ax 9
 ret
