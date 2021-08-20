@@ -43,6 +43,7 @@ typedef enum REGS {
 
 void reset(machine_t* machine);
 void store_to_reg(machine_t* machine, enum REGS reg, uint8_t value);
+uint8_t get_reg(machine_t* machine, enum REGS reg);
 void poke(machine_t* machine, uint32_t addr, uint8_t value);
 uint8_t peek(const machine_t* machine, uint32_t addr);
 void poke_stack(machine_t* machine, uint32_t addr, uint8_t value);
@@ -60,6 +61,8 @@ void mul_to_register(machine_t* machine, enum REGS reg, uint8_t value);
 void div_to_register(machine_t* machine, enum REGS reg, uint8_t value);
 uint32_t jump(machine_t* machine, uint32_t addr);
 uint32_t jump_if_zero(machine_t* machine, uint32_t addr);
+void no_op(machine_t* machine);
+
 
 
 #endif

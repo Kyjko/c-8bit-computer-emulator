@@ -1,0 +1,13 @@
+; test program
+
+mov ax 4
+
+mov bx 5
+add ax $bx 
+
+; comment
+
+mov cx 3
+add cx $ax 
+
+ret

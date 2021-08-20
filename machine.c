@@ -246,3 +246,23 @@ void print_register(machine_t* machine, enum REGS reg) {
         default: {}
     }
 }
+
+uint8_t get_reg(machine_t* machine, enum REGS reg) {
+    switch(reg) {
+        case ax: return machine->ax;
+        case bx: return machine->bx;
+        case cx: return machine->cx;
+        case dx: return machine->dx;
+        case sp: return machine->sp;
+        case bp: return machine->bp;
+        case pc: return machine->pc;
+        case fl: return machine->fl;
+        default: fprintf(stderr, "[-] get_reg() : invalid register identifier\n");
+    }
+
+    return 0;
+}
+
+void no_op(machine_t* machine) {
+    return;
+}
