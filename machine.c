@@ -268,5 +268,12 @@ void no_op(machine_t* machine) {
 }
 
 void show_screen_output(machine_t* machine) {
-    
+    // TODO
+}
+
+void print_memory(machine_t* machine, uint32_t n, uint32_t m) {
+    while(n <= m) {
+        fprintf(stdout, "%04x\n", machine->general_memory[n]);
+        ++n;
+    }
 }

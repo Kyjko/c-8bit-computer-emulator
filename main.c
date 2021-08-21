@@ -62,15 +62,37 @@ int32_t read_code(machine_t* machine) {
 
         // interpret tokenized form, assume there is no line with more than 5 words
         if(strcmp(line_contents[0], "mov") == 0) {
+            uint8_t val;
+             if(!strcmp(line_contents[2], "$ax")) {
+                val = get_reg(machine, ax);
+            } else if(!strcmp(line_contents[2], "$bx")) {
+                val = get_reg(machine, bx);
+            } else if(!strcmp(line_contents[2], "$cx")) {
+                val = get_reg(machine, cx);
+            } else if(!strcmp(line_contents[2], "$dx")) {
+                val = get_reg(machine, dx);
+            } else {
+                val = atoi(line_contents[2]);
+            }
+            if(sizeof(val) != sizeof(uint32_t) && sizeof(val) != sizeof(uint8_t)) {
+                fprintf(stderr, " [-](mov) invalid instruction argument! (operand)\n");
+                ++err_counter;
+            }
             // mov instr -> check for arguments
             if(strcmp(line_contents[1], "ax") == 0) {
-                store_to_reg(machine, ax, atoi(line_contents[2]));
+                store_to_reg(machine, ax, val);
             } else if(strcmp(line_contents[1], "bx") == 0) {
-                store_to_reg(machine, bx, atoi(line_contents[2]));
+                store_to_reg(machine, bx, val);
             } else if(strcmp(line_contents[1], "cx") == 0) {
-                store_to_reg(machine, cx, atoi(line_contents[2]));
+                store_to_reg(machine, cx, val);
             } else if(strcmp(line_contents[1], "dx") == 0) {
-                store_to_reg(machine, dx, atoi(line_contents[2]));
+                store_to_reg(machine, dx, val);
+
+            } else if(line_contents[1][0] == '%') {
+                // memory locations marked with %
+                uint32_t memory_addr = atoi(line_contents[1] + 1);
+                poke(machine, memory_addr, val);
+            
             } else {
                 fprintf(stderr, " [-] - invalid `mov` instruction arguments!\n");
                 ++err_counter;
