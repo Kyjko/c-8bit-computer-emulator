@@ -1,5 +1,9 @@
 #include "machine.h"
 
+void set_verbosity(machine_t* machine, _Bool verbosity) {
+    machine->is_verbose = verbosity;
+}
+
 void reset(machine_t* machine) {
     memset(machine->general_memory, 0, sizeof(machine->general_memory));
     memset(machine->stack, 0, sizeof(machine->stack));
@@ -268,7 +272,11 @@ void no_op(machine_t* machine) {
 }
 
 void show_screen_output(machine_t* machine) {
-    // TODO
+    if(machine->is_verbose) {
+        // long output
+    } else {
+        // short output
+    }
 }
 
 void print_memory(machine_t* machine, uint32_t n, uint32_t m) {
@@ -276,4 +284,267 @@ void print_memory(machine_t* machine, uint32_t n, uint32_t m) {
         fprintf(stdout, "%04x\n", machine->general_memory[n]);
         ++n;
     }
+}
+
+void add_to_program_memory(machine_t* machine, char* line) {
+    uint32_t i = 0;
+    while(machine->program_memory[i] != NULL) {
+        ++i;
+    }
+    machine->program_memory[i] = malloc(strlen(line)+1);
+    strcpy(machine->program_memory[i], line);
+    fprintf(stdout, "\"%s\" added to program memory at index %d\n", line, i);
+}
+
+uint32_t execute_program(machine_t* machine) {
+    machine->pc = 0;
+    printf("execute_program() begin\n");
+    uint32_t err_counter = 0;
+    uint32_t _i = 0;
+
+
+    uint32_t i = 0;
+    printf("PROGRAM MEMORY CONTENT:\n");
+    while(machine->program_memory[i] != NULL) {
+        printf("%s\n", machine->program_memory[i]);
+        ++i;
+    }
+
+    while(_i <= 20) {
+        ++_i;
+        char* buf = malloc(50);
+        //printf("%s\n", machine->program_memory[machine->pc]);
+        strcpy(buf, machine->program_memory[machine->pc]);
+        printf("EXECUTE_CODE BUF: %s , machine->pc = %d\n", buf, machine->pc);
+        char* line_contents[MAX_LINE_ELEMENTS];
+
+        uint8_t line_elem_counter = 0;
+
+        _Bool is_unknown_instr = false; 
+        
+        // tokenize line
+        char* tok = strtok(buf, delim);
+        while(tok != NULL) {
+            line_contents[line_elem_counter++] = tok;
+            tok = strtok(NULL, delim);
+        }
+
+        // interpret tokenized form, assume there is no line with more than 5 words
+        if(strcmp(line_contents[0], "mov") == 0) {
+            uint8_t val;
+             if(!strcmp(line_contents[2], "$ax")) {
+                val = get_reg(machine, ax);
+            } else if(!strcmp(line_contents[2], "$bx")) {
+                val = get_reg(machine, bx);
+            } else if(!strcmp(line_contents[2], "$cx")) {
+                val = get_reg(machine, cx);
+            } else if(!strcmp(line_contents[2], "$dx")) {
+                val = get_reg(machine, dx);
+            } else {
+                val = atoi(line_contents[2]);
+            }
+            if(sizeof(val) != sizeof(uint32_t) && sizeof(val) != sizeof(uint8_t)) {
+                fprintf(stderr, " [-](mov) invalid instruction argument! (operand)\n");
+                ++err_counter;
+            }
+            // mov instr -> check for arguments
+            if(strcmp(line_contents[1], "ax") == 0) {
+                store_to_reg(machine, ax, val);
+            } else if(strcmp(line_contents[1], "bx") == 0) {
+                store_to_reg(machine, bx, val);
+            } else if(strcmp(line_contents[1], "cx") == 0) {
+                store_to_reg(machine, cx, val);
+            } else if(strcmp(line_contents[1], "dx") == 0) {
+                store_to_reg(machine, dx, val);
+
+            } else if(line_contents[1][0] == '%') {
+                // memory locations marked with %
+                uint32_t memory_addr = atoi(line_contents[1] + 1);
+                poke(machine, memory_addr, val);
+            
+            } else {
+                fprintf(stderr, " [-] - invalid `mov` instruction arguments!\n");
+                ++err_counter;
+            }
+
+        } else if(strcmp(line_contents[0], "cmp") == 0) {
+            compare(machine, line_contents[1], line_contents[2]);
+        } else if(strcmp(line_contents[0], "jmp") == 0) {
+            jump(machine, atoi(line_contents[1]));
+        } else if(strcmp(line_contents[0], "jz") == 0) {
+            jump_if_zero(machine, atoi(line_contents[1]));
+        } else if(strcmp(line_contents[0], "pop") == 0) {
+            // first argument is the specified register
+            if(strcmp(line_contents[1], "ax") == 0) {
+                pop_stack(machine, ax);
+            } else if(strcmp(line_contents[1], "bx") == 0) {
+                pop_stack(machine, bx);
+            } else if(strcmp(line_contents[1], "cx") == 0) {
+                pop_stack(machine, cx);
+            } else if(strcmp(line_contents[1], "dx") == 0) {
+                pop_stack(machine, dx);
+            }
+        } else if(strcmp(line_contents[0], "push") == 0) {
+            if(strcmp(line_contents[1], "ax") == 0) {
+                push_stack(machine, ax);
+            } else if(strcmp(line_contents[1], "bx") == 0) {
+                push_stack(machine, bx);
+            } else if(strcmp(line_contents[1], "cx") == 0) {
+                push_stack(machine, cx);
+            } else if(strcmp(line_contents[1], "dx") == 0) {
+                push_stack(machine, dx);
+            }
+        } else if(strcmp(line_contents[0], "lea") == 0) {
+            // TODO: implement
+        } else if(strcmp(line_contents[0], "nop") == 0) {
+            // NOTHING - most useful instruction ever
+            // has to be included because of nop slides
+            no_op(machine);
+        } else if(strcmp(line_contents[0], "hlt") == 0) {
+            halt(machine);
+        } else if(strcmp(line_contents[0], "ret") == 0) {
+            // TODO: return from function ?????
+        } else if(strcmp(line_contents[0], "add") == 0) {
+            uint8_t val;
+                 // get val from get_reg
+            if(!strcmp(line_contents[2], "$ax")) {
+                val = get_reg(machine, ax);
+            } else if(!strcmp(line_contents[2], "$bx")) {
+                val = get_reg(machine, bx);
+            } else if(!strcmp(line_contents[2], "$cx")) {
+                val = get_reg(machine, cx);
+            } else if(!strcmp(line_contents[2], "$dx")) {
+                val = get_reg(machine, dx);
+            } else {
+                val = atoi(line_contents[2]);
+            }
+             
+             if(sizeof(val) != sizeof(uint32_t) && sizeof(val) != sizeof(uint8_t)) {
+                fprintf(stderr, " [-](add) invalid instruction argument! (operand)\n");
+                ++err_counter;
+            }
+             if(!strcmp(line_contents[1], "ax")) {
+                add_to_register(machine, ax, val);
+             } else if(!strcmp(line_contents[1], "bx")) {
+                add_to_register(machine, bx, val);
+             } else if(!strcmp(line_contents[1], "cx")) {
+                add_to_register(machine, cx, val);
+             } else if(!strcmp(line_contents[1], "dx")) {
+                add_to_register(machine, dx, val);
+             } 
+             else {
+                 fprintf(stderr, " [-](add) invalid instruction argument! (register)\n");
+                 ++err_counter;
+             }
+        } else if(strcmp(line_contents[0], "sub") == 0) {
+            uint8_t val;
+             if(!strcmp(line_contents[2], "$ax")) {
+                val = get_reg(machine, ax);
+            } else if(!strcmp(line_contents[2], "$bx")) {
+                val = get_reg(machine, bx);
+            } else if(!strcmp(line_contents[2], "$cx")) {
+                val = get_reg(machine, cx);
+            } else if(!strcmp(line_contents[2], "$dx")) {
+                val = get_reg(machine, dx);
+            } else {
+                val = atoi(line_contents[2]);
+            }
+            if(sizeof(val) != sizeof(uint32_t) && sizeof(val) != sizeof(uint8_t)) {
+                fprintf(stderr, " [-](sub) invalid instruction argument! (operand)\n");
+                ++err_counter;
+            }
+             if(!strcmp(line_contents[1], "ax")) {
+                sub_to_register(machine, ax, val);
+             } else if(!strcmp(line_contents[1], "bx")) {
+                sub_to_register(machine, bx, val);
+             } else if(!strcmp(line_contents[1], "cx")) {
+                sub_to_register(machine, cx, val);
+             } else if(!strcmp(line_contents[1], "dx")) {
+                sub_to_register(machine, dx, val);
+             } 
+             else {
+                 fprintf(stderr, " [-](sub) invalid instruction argument! (register)\n");
+                 ++err_counter;
+             }
+        } else if(strcmp(line_contents[0], "mul") == 0) {
+            uint8_t val;
+             if(!strcmp(line_contents[2], "$ax")) {
+                val = get_reg(machine, ax);
+            } else if(!strcmp(line_contents[2], "$bx")) {
+                val = get_reg(machine, bx);
+            } else if(!strcmp(line_contents[2], "$cx")) {
+                val = get_reg(machine, cx);
+            } else if(!strcmp(line_contents[2], "$dx")) {
+                val = get_reg(machine, dx);
+            } else {
+                val = atoi(line_contents[2]);
+            }
+            if(sizeof(val) != sizeof(uint32_t) && sizeof(val) != sizeof(uint8_t)) {
+                fprintf(stderr, " [-](mul) invalid instruction argument! (operand)\n");
+                ++err_counter;
+            }
+             if(!strcmp(line_contents[1], "ax")) {
+                mul_to_register(machine, ax, val);
+             } else if(!strcmp(line_contents[1], "bx")) {
+                mul_to_register(machine, bx, val);
+             } else if(!strcmp(line_contents[1], "cx")) {
+                mul_to_register(machine, cx, val);
+             } else if(!strcmp(line_contents[1], "dx")) {
+                mul_to_register(machine, dx, val);
+             } 
+             else {
+                 fprintf(stderr, " [-](mul) invalid instruction argument! (register)\n");
+                 ++err_counter;
+             }
+        } else if(strcmp(line_contents[0], "div") == 0) {
+            uint8_t val;
+             if(!strcmp(line_contents[2], "$ax")) {
+                val = get_reg(machine, ax);
+            } else if(!strcmp(line_contents[2], "$bx")) {
+                val = get_reg(machine, bx);
+            } else if(!strcmp(line_contents[2], "$cx")) {
+                val = get_reg(machine, cx);
+            } else if(!strcmp(line_contents[2], "$dx")) {
+                val = get_reg(machine, dx);
+            } else {
+                val = atoi(line_contents[2]);
+            }
+            if(sizeof(val) != sizeof(uint32_t) && sizeof(val) != sizeof(uint8_t)) {
+                fprintf(stderr, " [-](div) invalid instruction argument! (operand)\n");
+                ++err_counter;
+            }
+             if(strcmp(line_contents[1], "ax")) {
+                div_to_register(machine, ax, val);
+             } else if(!strcmp(line_contents[1], "bx")) {
+                div_to_register(machine, bx, val);
+             } else if(!strcmp(line_contents[1], "cx")) {
+                div_to_register(machine, cx, val);
+             } else if(!strcmp(line_contents[1], "dx")) {
+                div_to_register(machine, dx, val);
+             } 
+             else {
+                 fprintf(stderr, " [-](div) invalid instruction argument! (register)\n");
+                 ++err_counter;
+             }
+        } else {
+            is_unknown_instr = true;
+            
+        }
+        
+        if(!is_unknown_instr) {
+            printf("print_registers()\n");
+            print_registers(machine);
+        } else {
+            fprintf(stderr, " [-] unknown instruction!\n");
+            ++err_counter;
+        }
+        
+        is_unknown_instr = false;
+        
+    
+    }
+
+    printf("execute() end\n");
+
+    return err_counter;
 }
