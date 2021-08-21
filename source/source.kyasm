@@ -10,4 +10,6 @@ add ax $bx
 mov cx 3
 add cx $ax 
 
+mov %45 6
+
 ret

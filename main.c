@@ -2,7 +2,7 @@
 
     Parse custom assembly code
 
-    TODO: add instruction to work on registers
+    TODO: memory poke and peek instruction implementation
 
 */
 
@@ -15,8 +15,8 @@
 
 // assume one line doesn't contain more than 8 bits worth of chars
 #define BUF_LEN (2<<9)-1
-// assume there's a maximum of 5 space-delimetered "words" in a line
-#define MAX_LINE_ELEMENTS 5
+// assume there's a maximum of 50 space-delimetered "words" in a line
+#define MAX_LINE_ELEMENTS 50
 
 /*typedef enum INSTR {
     mov, cmp, jmp, jz, pop, push, lea, nop, hlt, ret, add, sub, mul, div
@@ -72,7 +72,7 @@ int32_t read_code(machine_t* machine) {
             } else if(strcmp(line_contents[1], "dx") == 0) {
                 store_to_reg(machine, dx, atoi(line_contents[2]));
             } else {
-                fprintf(stderr, " [COMPILATION] - invalid `mov` instruction arguments!\n");
+                fprintf(stderr, " [-] - invalid `mov` instruction arguments!\n");
                 ++err_counter;
             }
 
@@ -263,7 +263,7 @@ int32_t read_code(machine_t* machine) {
     return err_counter;
 }
 
-int main(void) {
+int main(int argc, char** argv) {
 
     machine_t* machine = (machine_t*) malloc(sizeof(machine_t));
 
@@ -274,7 +274,7 @@ int main(void) {
         return -1;
     } else {
         fprintf(stderr, "[===> CODE EXECUTION <===] - SUCCESS!\n");
-
+        show_screen_output(machine);
         // TODO: something?
     }
 

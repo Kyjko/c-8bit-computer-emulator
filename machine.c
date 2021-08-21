@@ -266,3 +266,7 @@ uint8_t get_reg(machine_t* machine, enum REGS reg) {
 void no_op(machine_t* machine) {
     return;
 }
+
+void show_screen_output(machine_t* machine) {
+    
+}

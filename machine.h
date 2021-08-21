@@ -13,16 +13,21 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef _UNIX_COLORS__
+#define BLK "\e[0;30m"
+#define RED "\e[0;31m"
+#define GRN "\e[0;32m"
+#define YEL "\e[0;33m"
+#define BLU "\e[0;34m"
+#define MAG "\e[0;35m"
+#define CYN "\e[0;36m"
+#define WHT "\e[0;37m"
+#endif
+
 #define GEN_MEM_CAPACITY 1024*64
 #define STACK_CAPACITY 1024
 #define RES_X 24
 #define RES_Y 24
-
-typedef struct monitor {
-    uint8_t pixels[RES_X*RES_Y][3];
-
-
-} monitor_t;
 
 typedef struct machine {
     uint8_t ax, bx, cx, dx, sp, bp, pc, fl;
@@ -32,7 +37,7 @@ typedef struct machine {
         uint8_t stack[STACK_CAPACITY];
     };
 
-    monitor_t monitor;
+    uint8_t screen_output[RES_X*RES_Y];
 
 } machine_t;
 
@@ -62,6 +67,7 @@ void div_to_register(machine_t* machine, enum REGS reg, uint8_t value);
 uint32_t jump(machine_t* machine, uint32_t addr);
 uint32_t jump_if_zero(machine_t* machine, uint32_t addr);
 void no_op(machine_t* machine);
+void show_screen_output(machine_t* machine);
 
 
 
