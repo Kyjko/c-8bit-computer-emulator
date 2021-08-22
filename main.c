@@ -24,14 +24,20 @@
 
 uint32_t g_err_counter = 0;
 
-void read_code(machine_t* machine) {
+void read_code(machine_t* machine, const char* source_file_name) {
+
+    // create relative path to source file
+    char source_path[] = "./source/";
+    strcat(source_path, source_file_name);
+
     reset(machine);
     #ifdef _DEBUG_
     printf("1 read_code()\n");
     #endif
-    FILE* fp = fopen("./source/source.kyasm", "r");
+    FILE* fp = fopen(source_path, "r");
     if(fp == NULL) {
         fprintf(stderr, "[-] fopen() - Cannot find the source file!\n");
+        ++g_err_counter;
         return;
     }
     
@@ -83,14 +89,45 @@ void read_code(machine_t* machine) {
 int main(int argc, char** argv) {
     
     machine_t* machine = (machine_t*) malloc(sizeof(machine_t));
+
+    // default source file name
+    char source_file_name[] = "source.kyasm";
+    // set verbosity to 0 by default
+    set_verbosity(machine, 0);
     
-    // set verbosity to high
-    set_verbosity(machine, 1);
+    if(argc > 1) {
+        
+        if(strcmp(argv[1], "-h") == 0 || strcmp(argv[1], "-help") == 0) {
+            // help
+            fprintf(stdout, "Usage: main.exe [-S <filename>] [-V]\n\t-V: verbose output\n\t-S <filename>: specify assembly source file\n");
+            return 0;
+        }
+
+        uint32_t i = 1;
+        while(i < argc) {
+            // search through optional arguments in argv
+            if(strcmp(argv[i], "-V") == 0) {
+                set_verbosity(machine, 1);
+            }
+            if(strcmp(argv[i], "-S") == 0) {
+            // use custom source file for assembly code
+                if(argv[i+1] != NULL && strlen(argv[i+1]) == 0) {
+                    fprintf(stderr, "[-] - source file name cannot be empty!\n");
+                    return -1;
+                } else {
+                    strcpy(source_file_name, argv[2]);
+                }
+            }
+
+            ++i;
+        }
+    }
     
     #ifdef _DEBUG_
     printf("1 main()\n");
     #endif
-    read_code(machine);
+
+    read_code(machine, source_file_name);
     
     if(g_err_counter != 0) {
         fprintf(stderr, "[===> CODE EXECUTION <===] - ERROR(S)!\n");
