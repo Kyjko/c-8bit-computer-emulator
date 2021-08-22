@@ -12,6 +12,8 @@
 #include "machine.c"
 #include <stdlib.h>
 #include <stdbool.h>
+#include <io.h>
+#include <fcntl.h>
 
 // assume one line doesn't contain more than 8 bits worth of chars
 #define BUF_LEN (2<<9)-1
@@ -36,7 +38,7 @@ void read_code(machine_t* machine, const char* source_file_name) {
     #endif
     FILE* fp = fopen(source_path, "r");
     if(fp == NULL) {
-        fprintf(stderr, "[-] fopen() - Cannot find the source file!\n");
+        fprintf(stderr, "[-] fopen() - Cannot open source file!\n");
         ++g_err_counter;
         return;
     }
@@ -87,7 +89,7 @@ void read_code(machine_t* machine, const char* source_file_name) {
 }
 
 int main(int argc, char** argv) {
-    
+
     machine_t* machine = (machine_t*) malloc(sizeof(machine_t));
 
     // default source file name
@@ -117,6 +119,9 @@ int main(int argc, char** argv) {
                 } else {
                     strcpy(source_file_name, argv[2]);
                 }
+            }
+            if(strcmp(argv[i], "-O") == 0) {
+               set_redirect_machine_output(machine, 1);
             }
 
             ++i;

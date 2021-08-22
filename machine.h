@@ -15,6 +15,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 #include <stdlib.h>
+#include <time.h>
 
 // define ansi colors if compiled with unix system
 #ifdef __unix__
@@ -41,6 +42,8 @@ const char delim[2] = " ";
 typedef struct machine {
     uint8_t halt;
     uint8_t ax, bx, cx, dx, sp, bp, pc, fl;
+
+    int is_output_redirected;
 
     struct mem {
         uint8_t general_memory[GEN_MEM_CAPACITY];
@@ -84,6 +87,7 @@ uint32_t jump(machine_t* machine, uint32_t addr);
 uint32_t jump_if_not_zero(machine_t* machine, uint32_t addr);
 void no_op(machine_t* machine);
 void show_screen_output(machine_t* machine);
+void set_redirect_machine_output(machine_t* machine, int flag);
 
 
 

@@ -239,8 +239,22 @@ void halt(machine_t* machine) {
 }
 
 void print_registers(machine_t* machine) {
-    fprintf(stdout, "==== REGISTERS ====\nax:\t%04x\nbx:\t%04x\ncx:\t%04x\ndx:\t%04x\nsp:\t%04x\nbp:\t%04x\npc:\t%04x\nfl:\t%04x\n", 
+    char buffer[100];
+    sprintf(buffer, "==== REGISTERS ====\nax:\t%04x\nbx:\t%04x\ncx:\t%04x\ndx:\t%04x\nsp:\t%04x\nbp:\t%04x\npc:\t%04x\nfl:\t%04x\n", 
     machine->ax, machine->bx, machine->cx, machine->dx, machine->sp, machine->bp, machine->pc, machine->fl);
+
+    if(machine->is_output_redirected == 1) {
+        FILE* fp;
+        fp = fopen("./output.debug", "a+");
+        if(fp == NULL) {
+            fprintf(stderr, "[-] - Error while writing output to output file!\n");
+            return;
+        }
+        fprintf(fp, "%s", buffer);
+        fclose(fp);
+    } else {
+        fprintf(stdout, "%s", buffer);
+    }
 }  
 void print_register(machine_t* machine, enum REGS reg) {
     switch(reg) {
@@ -305,6 +319,18 @@ void add_to_program_memory(machine_t* machine, char* line) {
 
 uint32_t execute_program(machine_t* machine) {
     // set program counter to start
+
+    if(machine->is_output_redirected) {
+        FILE* fp;
+        fp = fopen("./output.debug", "a+");
+        if(fp == NULL) {
+            fprintf(stderr, "[-] - Error while writing output to output file!\n");
+            return 1;
+        }
+        fprintf(fp, "<-------------%u------------->\n", (unsigned)time(NULL));
+        fclose(fp);
+    }
+
     machine->pc = 0;
     printf("-------- execute_program() begin --------\n");
     uint32_t err_counter = 0;
@@ -563,4 +589,9 @@ uint32_t execute_program(machine_t* machine) {
     printf("-------- execute() end --------\n");
 
     return err_counter;
+}
+
+void set_redirect_machine_output(machine_t* machine, int flag) {
+    machine->is_output_redirected = flag;
+    printf("OUTPUT REDIRECTION: %s\n", machine->is_output_redirected ? "ON" : "OFF");
 }

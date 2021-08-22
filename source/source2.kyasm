@@ -1,0 +1,11 @@
+; for loop
+
+mov cx 0
+mov bx 5
+cmp cx bx
+jz 6
+add cx 1
+jmp 2
+
+mov ax $cx
+end
