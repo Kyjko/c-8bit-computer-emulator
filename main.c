@@ -108,5 +108,8 @@ int main(int argc, char** argv) {
     #endif
 
     free(machine);
+
+    fprintf(stdout, "enter any key to continue...\n");
+    fgetc(stdin);
     return 0;
 }
