@@ -11,6 +11,9 @@ mov cx 3
 add cx $ax 
 
 mov %45 6
-mov %545 $cx
+mov %545 $cx 
 
-ret
+cmp ax bx
+jz 4
+
+end

@@ -36,14 +36,18 @@ void read_code(machine_t* machine) {
     }
     
     char buf[BUF_LEN];
+    #ifdef _DEBUG_
     uint32_t ln = 0;
+    #endif
     while(fgets(buf, BUF_LEN, fp)) {
         // only look at non-empty lines
         //remove trailing newline
         buf[strcspn(buf, "\n")] = 0;
         if(strcmp(buf, "\n") != 0) {
 
+        #ifdef _DEBUG_
         printf("BUF: %s\n", buf);
+        #endif
         char* line_contents[MAX_LINE_ELEMENTS];
         uint8_t line_elem_counter = 0;
 
@@ -57,7 +61,9 @@ void read_code(machine_t* machine) {
         }
 
         if(strlen(buf) != 0 && strcmp(line_contents[0], ";") != 0) {
+            #ifdef _DEBUG_
             fprintf(stdout, "LINE #%d: %s\n", ++ln, buf);
+            #endif
             add_to_program_memory(machine, buf);
         }
         }
@@ -77,6 +83,9 @@ void read_code(machine_t* machine) {
 int main(int argc, char** argv) {
     
     machine_t* machine = (machine_t*) malloc(sizeof(machine_t));
+    
+    // set verbosity to high
+    set_verbosity(machine, 1);
     
     #ifdef _DEBUG_
     printf("1 main()\n");

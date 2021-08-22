@@ -3,6 +3,8 @@
     Registers: 
         ax, bx, cx, dx, sp, bp, pc, fl
 
+        halt: halt signal
+
 */
 
 #ifndef MACHINE_H_
@@ -37,6 +39,7 @@ const char delim[2] = " ";
 #define MAX_LINE_ELEMENTS 50
 
 typedef struct machine {
+    uint8_t halt;
     uint8_t ax, bx, cx, dx, sp, bp, pc, fl;
 
     struct mem {
@@ -47,7 +50,7 @@ typedef struct machine {
     uint8_t screen_output[RES_X*RES_Y];
     char* program_memory[PROGRAM_MEM_CAPACITY];
 
-    _Bool is_verbose;
+    int is_verbose;
 
 } machine_t;
 
@@ -55,7 +58,7 @@ typedef enum REGS {
     ax, bx, cx, dx, sp, bp, pc, fl
 } REGS;
 
-void set_verbosity(machine_t* machine, _Bool verbosity);
+void set_verbosity(machine_t* machine, int verbosity);
 uint32_t execute_program(machine_t* machine);
 void add_to_program_memory(machine_t* machine, char* line);
 void reset(machine_t* machine);
@@ -78,7 +81,7 @@ void sub_to_register(machine_t* machine, enum REGS reg, uint8_t value);
 void mul_to_register(machine_t* machine, enum REGS reg, uint8_t value);
 void div_to_register(machine_t* machine, enum REGS reg, uint8_t value);
 uint32_t jump(machine_t* machine, uint32_t addr);
-uint32_t jump_if_zero(machine_t* machine, uint32_t addr);
+uint32_t jump_if_not_zero(machine_t* machine, uint32_t addr);
 void no_op(machine_t* machine);
 void show_screen_output(machine_t* machine);
 

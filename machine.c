@@ -1,6 +1,6 @@
 #include "machine.h"
 
-void set_verbosity(machine_t* machine, _Bool verbosity) {
+void set_verbosity(machine_t* machine, int verbosity) {
     machine->is_verbose = verbosity;
 }
 
@@ -15,6 +15,8 @@ void reset(machine_t* machine) {
     machine->bp = 0;
     machine->pc = 0;
     machine->fl = 0;
+
+    machine->halt = 0;
 }
 
 void store_to_reg(machine_t* machine, REGS reg, uint8_t value) {
@@ -86,9 +88,11 @@ uint32_t jump(machine_t* machine, uint32_t addr) {
     return machine->pc;
 }
 
-uint32_t jump_if_zero(machine_t* machine, uint32_t addr) {
+uint32_t jump_if_not_zero(machine_t* machine, uint32_t addr) {
     if(machine->fl != 0) {
         machine->pc = addr;
+    } else {
+        machine->pc++;
     }
 
     return machine->pc;
@@ -100,6 +104,7 @@ void poke(machine_t* machine, uint32_t addr, uint8_t value) {
         fprintf(stderr, "[-] poke() : invalid memory address\n");
     }
     machine->general_memory[addr] = value;
+    machine->pc++;
 
 }
 
@@ -108,7 +113,6 @@ uint8_t peek(const machine_t* machine, uint32_t addr) {
         fprintf(stderr, "[-] peek() : invalid memory address\n");
         return 0;
     }
-
     return machine->general_memory[addr];
 
 }
@@ -118,6 +122,7 @@ void poke_stack(machine_t* machine, uint32_t addr, uint8_t value) {
         fprintf(stderr, "[-] poke_stack() : invalid memory address\n");
     }
     machine->stack[addr] = value;
+    machine->pc++;
 }
 
 uint32_t get_stack_bottom(machine_t* machine) {
@@ -230,11 +235,11 @@ void compare(machine_t* machine, char* reg_1, char* reg_2) {
 
 void halt(machine_t* machine) {
     // TODO: halt
-    machine->pc++;
+    machine->halt = 1;
 }
 
 void print_registers(machine_t* machine) {
-    fprintf(stdout, "ax:\t%04x\nbx:\t%04x\ncx:\t%04x\ndx:\t%04x\nsp:\t%04x\nbp:\t%04x\npc:\t%04x\nfl:\t%04x\n", 
+    fprintf(stdout, "==== REGISTERS ====\nax:\t%04x\nbx:\t%04x\ncx:\t%04x\ndx:\t%04x\nsp:\t%04x\nbp:\t%04x\npc:\t%04x\nfl:\t%04x\n", 
     machine->ax, machine->bx, machine->cx, machine->dx, machine->sp, machine->bp, machine->pc, machine->fl);
 }  
 void print_register(machine_t* machine, enum REGS reg) {
@@ -272,7 +277,7 @@ void no_op(machine_t* machine) {
 }
 
 void show_screen_output(machine_t* machine) {
-    if(machine->is_verbose) {
+    if(machine->is_verbose == 1) {
         // long output
     } else {
         // short output
@@ -293,29 +298,34 @@ void add_to_program_memory(machine_t* machine, char* line) {
     }
     machine->program_memory[i] = malloc(strlen(line)+1);
     strcpy(machine->program_memory[i], line);
+    #ifdef _DEBUG_
     fprintf(stdout, "\"%s\" added to program memory at index %d\n", line, i);
+    #endif
 }
 
 uint32_t execute_program(machine_t* machine) {
+    // set program counter to start
     machine->pc = 0;
-    printf("execute_program() begin\n");
+    printf("-------- execute_program() begin --------\n");
     uint32_t err_counter = 0;
-    uint32_t _i = 0;
 
-
-    uint32_t i = 0;
-    printf("PROGRAM MEMORY CONTENT:\n");
-    while(machine->program_memory[i] != NULL) {
-        printf("%s\n", machine->program_memory[i]);
-        ++i;
+    if(machine->is_verbose == 1) {
+        uint32_t i = 0;
+        printf("PROGRAM MEMORY CONTENT:\n");
+    
+        while(machine->program_memory[i] != NULL) {
+            printf("%s\n", machine->program_memory[i]);
+            ++i;
+        }
     }
 
-    while(_i <= 20) {
-        ++_i;
+    while(!machine->halt) {
         char* buf = malloc(50);
         //printf("%s\n", machine->program_memory[machine->pc]);
         strcpy(buf, machine->program_memory[machine->pc]);
+        #ifdef _DEBUG_
         printf("EXECUTE_CODE BUF: %s , machine->pc = %d\n", buf, machine->pc);
+        #endif
         char* line_contents[MAX_LINE_ELEMENTS];
 
         uint8_t line_elem_counter = 0;
@@ -372,7 +382,7 @@ uint32_t execute_program(machine_t* machine) {
         } else if(strcmp(line_contents[0], "jmp") == 0) {
             jump(machine, atoi(line_contents[1]));
         } else if(strcmp(line_contents[0], "jz") == 0) {
-            jump_if_zero(machine, atoi(line_contents[1]));
+            jump_if_not_zero(machine, atoi(line_contents[1]));
         } else if(strcmp(line_contents[0], "pop") == 0) {
             // first argument is the specified register
             if(strcmp(line_contents[1], "ax") == 0) {
@@ -402,8 +412,9 @@ uint32_t execute_program(machine_t* machine) {
             no_op(machine);
         } else if(strcmp(line_contents[0], "hlt") == 0) {
             halt(machine);
-        } else if(strcmp(line_contents[0], "ret") == 0) {
-            // TODO: return from function ?????
+        } else if(strcmp(line_contents[0], "end") == 0) {
+            halt(machine);
+            
         } else if(strcmp(line_contents[0], "add") == 0) {
             uint8_t val;
                  // get val from get_reg
@@ -532,8 +543,12 @@ uint32_t execute_program(machine_t* machine) {
         }
         
         if(!is_unknown_instr) {
+            #ifdef _DEBUG_
             printf("print_registers()\n");
-            print_registers(machine);
+            #endif
+            if(machine->is_verbose == 1) {
+                print_registers(machine);
+            }
         } else {
             fprintf(stderr, " [-] unknown instruction!\n");
             ++err_counter;
@@ -541,10 +556,11 @@ uint32_t execute_program(machine_t* machine) {
         
         is_unknown_instr = false;
         
+        free(buf);
     
     }
 
-    printf("execute() end\n");
+    printf("-------- execute() end --------\n");
 
     return err_counter;
 }
