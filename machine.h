@@ -36,7 +36,7 @@ const char delim[2] = " ";
 #define STACK_CAPACITY 1024
 #define RES_X 24
 #define RES_Y 24
-// assume there's a maximum of 50 space-delimetered "words" in a line ( applies to comments as well!)
+// assume there's a maximum of 50 space-delimetered "words" in a line
 #define MAX_LINE_ELEMENTS 50
 
 typedef struct machine {

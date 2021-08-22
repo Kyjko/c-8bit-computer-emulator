@@ -365,7 +365,7 @@ uint32_t execute_program(machine_t* machine) {
             tok = strtok(NULL, delim);
         }
 
-        // interpret tokenized form, assume there is no line with more than 5 words
+        // interpret tokenized form, assume there is no line with more than 50 words
         if(strcmp(line_contents[0], "mov") == 0) {
             uint8_t val;
              if(!strcmp(line_contents[2], "$ax")) {
