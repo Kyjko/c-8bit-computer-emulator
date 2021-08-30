@@ -1,9 +1,28 @@
-/*
+/* 
+
+    machine.h - Bognár Miklós 2021
 
     Registers: 
         ax, bx, cx, dx, sp, bp, pc, fl
 
+        general purpose registers:
+            ax, bx, cx, dx - 8bit 
+        reserved:
+            sp, bp, pc - 8bit
+        flag:
+            fl
+
+    Special flags:
         halt: halt signal
+
+    Memory:
+        General purpose (Functions as Heap):
+            size: 1024*64
+            functions:
+                peak - Get data at specific address - only address bound check, NO DATA CHECK!
+                poke - Store data at specific address - only address. bound check, NO DATA CHECK!
+        Stack:
+            size: 1024
 
 */
 
@@ -88,7 +107,5 @@ uint32_t jump_if_not_zero(machine_t* machine, uint32_t addr);
 void no_op(machine_t* machine);
 void show_screen_output(machine_t* machine);
 void set_redirect_machine_output(machine_t* machine, int flag);
-
-
 
 #endif
